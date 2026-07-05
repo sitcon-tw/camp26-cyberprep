@@ -243,7 +243,7 @@ if (page === "app") {
   function renderContent(value) {
     const content = document.createElement("p");
     content.className = "post-content";
-    content.textContent = value;
+    content.innerHTML = value;
     return content;
   }
 

