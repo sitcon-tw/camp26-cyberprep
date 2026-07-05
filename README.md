@@ -36,6 +36,14 @@ http://localhost:8080
 PORT=8081 go run .
 ```
 
+## Docker Compose
+
+```sh
+docker compose up --build
+```
+
+服務會在容器內使用 `PORT=8080`，資料會保存在 compose volume `cyberprep-data`。
+
 ## 課堂操作
 
 1. 開啟 `http://localhost:8080`

@@ -1,0 +1,13 @@
+services:
+  fake-threads:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+    volumes:
+      - cyberprep-data:/app/data
+
+volumes:
+  cyberprep-data:
