@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cyberprep Feed</title>
+  <link rel="icon" href="/static/mark.svg">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="app" data-username="{{.Username}}" data-display-name="{{.DisplayName}}">
+  <div class="app-shell">
+    <aside class="rail" aria-label="Primary">
+      <a class="rail-brand" href="/app" aria-label="Cyberprep Lab">
+        <img src="/static/mark.svg" alt="">
+      </a>
+      <nav class="rail-nav">
+        <a class="icon-link active" href="/app" aria-label="Home" title="Home">
+          <svg aria-hidden="true"><use href="/static/icons.svg#home"></use></svg>
+        </a>
+        <button class="icon-link" id="refresh-button" type="button" aria-label="Refresh" title="Refresh">
+          <svg aria-hidden="true"><use href="/static/icons.svg#refresh"></use></svg>
+        </button>
+        <button class="icon-link" id="logout-button" type="button" aria-label="Logout" title="Logout">
+          <svg aria-hidden="true"><use href="/static/icons.svg#log-out"></use></svg>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="feed-shell">
+      <header class="feed-header">
+        <div>
+          <p class="kicker">Cyberprep Feed</p>
+          <h1>Home</h1>
+        </div>
+        <div class="profile-chip">
+          <span class="avatar">{{initial .DisplayName}}</span>
+          <div>
+            <strong>{{.DisplayName}}</strong>
+            <span>@{{.Username}}</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="composer" aria-label="Create post">
+        <span class="avatar">{{initial .DisplayName}}</span>
+        <form id="post-form" class="composer-form">
+          <textarea name="content" maxlength="280" rows="3" placeholder="寫下一則可以在 Network 面板觀察的貼文..." required></textarea>
+          <div class="composer-actions">
+            <p id="post-message" class="message" role="status"></p>
+            <span id="char-count">0 / 280</span>
+            <button class="primary-button compact" type="submit">
+              <svg aria-hidden="true"><use href="/static/icons.svg#send"></use></svg>
+              發布
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section id="posts" class="posts" aria-live="polite"></section>
+    </main>
+  </div>
+</body>
+</html>

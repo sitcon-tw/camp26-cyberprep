@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>註冊 | Cyberprep Lab</title>
+  <link rel="icon" href="/static/mark.svg">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="register">
+  <main class="auth-shell">
+    <section class="auth-panel" aria-labelledby="register-title">
+      <a class="brand-row" href="/login" aria-label="Cyberprep Lab">
+        <img src="/static/mark.svg" alt="">
+        <span>Cyberprep Lab</span>
+      </a>
+      <div class="auth-heading">
+        <p>Camp 2026 learning demo</p>
+        <h1 id="register-title">註冊</h1>
+      </div>
+      <form id="register-form" class="form-stack">
+        <label>
+          <span>帳號</span>
+          <input name="username" autocomplete="username" spellcheck="false" placeholder="student01" required>
+        </label>
+        <label>
+          <span>顯示名稱</span>
+          <input name="displayName" autocomplete="name" required>
+        </label>
+        <label>
+          <span>密碼</span>
+          <input name="password" type="password" autocomplete="new-password" required>
+        </label>
+        <p id="form-message" class="message" role="status"></p>
+        <button class="primary-button" type="submit">
+          <svg aria-hidden="true"><use href="/static/icons.svg#user-plus"></use></svg>
+          建立帳號
+        </button>
+      </form>
+      <p class="switch-link">已經有帳號？<a href="/login">登入</a></p>
+    </section>
+  </main>
+</body>
+</html>
