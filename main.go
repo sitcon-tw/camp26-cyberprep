@@ -27,7 +27,6 @@ const (
 
 var (
 	errDuplicateUsername = errors.New("duplicate username")
-	errForbidden         = errors.New("forbidden")
 	errNotFound          = errors.New("not found")
 	errParentMismatch    = errors.New("parent comment does not belong to post")
 )
@@ -403,7 +402,7 @@ func (s *jsonStore) listPosts(currentUserID int64) ([]post, error) {
 			CreatedAt:         record.CreatedAt,
 			AuthorUsername:    author.Username,
 			AuthorDisplayName: author.DisplayName,
-			CanDelete:         record.UserID == currentUserID,
+			CanDelete:         true,
 			Comments:          commentsByPost[record.ID],
 		}
 		if item.Comments == nil {
@@ -483,7 +482,7 @@ func (s *jsonStore) createComment(currentUser user, postID int64, parentID *int6
 	}, nil
 }
 
-func (s *jsonStore) deletePost(currentUserID, postID int64) error {
+func (s *jsonStore) deletePost(postID int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -491,9 +490,6 @@ func (s *jsonStore) deletePost(currentUserID, postID int64) error {
 	for i, record := range s.data.Posts {
 		if record.ID == postID {
 			index = i
-			if record.UserID != currentUserID {
-				return errForbidden
-			}
 			break
 		}
 	}
@@ -512,7 +508,7 @@ func (s *jsonStore) deletePost(currentUserID, postID int64) error {
 	return s.saveLocked()
 }
 
-func (s *jsonStore) deleteComment(currentUserID, commentID int64) error {
+func (s *jsonStore) deleteComment(commentID int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -520,9 +516,6 @@ func (s *jsonStore) deleteComment(currentUserID, commentID int64) error {
 	for _, record := range s.data.Comments {
 		if record.ID == commentID {
 			found = true
-			if record.UserID != currentUserID {
-				return errForbidden
-			}
 			break
 		}
 	}
@@ -607,7 +600,7 @@ func buildComments(records []commentRecord, users map[int64]userRecord, postIDs 
 			CreatedAt:         record.CreatedAt,
 			AuthorUsername:    author.Username,
 			AuthorDisplayName: author.DisplayName,
-			CanDelete:         record.UserID == currentUserID,
+			CanDelete:         true,
 			Replies:           []comment{},
 		}
 		if record.ParentCommentID != nil {
@@ -872,24 +865,14 @@ func (a *app) createComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) deletePost(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := a.currentUser(r)
-	if !ok {
-		writeError(w, http.StatusUnauthorized, "需要先登入")
-		return
-	}
-
 	postID, ok := pathID(w, r, "postID")
 	if !ok {
 		return
 	}
 
-	err := a.store.deletePost(currentUser.ID, postID)
+	err := a.store.deletePost(postID)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "找不到貼文")
-		return
-	}
-	if errors.Is(err, errForbidden) {
-		writeError(w, http.StatusForbidden, "只能刪除自己的貼文")
 		return
 	}
 	if err != nil {
@@ -901,24 +884,14 @@ func (a *app) deletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *app) deleteComment(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := a.currentUser(r)
-	if !ok {
-		writeError(w, http.StatusUnauthorized, "需要先登入")
-		return
-	}
-
 	commentID, ok := pathID(w, r, "commentID")
 	if !ok {
 		return
 	}
 
-	err := a.store.deleteComment(currentUser.ID, commentID)
+	err := a.store.deleteComment(commentID)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "找不到留言")
-		return
-	}
-	if errors.Is(err, errForbidden) {
-		writeError(w, http.StatusForbidden, "只能刪除自己的留言")
 		return
 	}
 	if err != nil {

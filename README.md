@@ -63,6 +63,7 @@ docker compose up --build
 - Cookie 沒有設定 `HttpOnly`，所以前端 JavaScript 可以讀到
 - 沒有 CSRF 防護
 - 貼文與留言內容會被當成 HTML 插入頁面，因此預設可以示範 stored XSS
+- `DELETE /api/posts/{postID}` 與 `DELETE /api/comments/{commentID}` 不需要登入，也不檢查資源擁有者，因此可以示範 broken access control
 - 沒有 rate limit
 - 沒有 HTTPS
 - 沒有正式資料庫與 migration
@@ -81,6 +82,17 @@ docker compose up --build
 
 如果想確認 HTML 會被解析，可以先發 `<h1>Test</h1>`。它應該會變成標題，而不是顯示原始文字。
 
+## Broken Access Control Lab
+
+刪除 API 是刻意做壞的：不需要 cookie，也不確認目前使用者是不是作者。知道貼文或留言 ID 的人，就可以直接刪除。
+
+```sh
+curl -X DELETE http://localhost:8080/api/posts/1
+curl -X DELETE http://localhost:8080/api/comments/1
+```
+
+課堂上可以讓學員先用 DevTools 觀察刪除 request，再把 Cookie header 移除重送一次，對比「登入驗證」和「授權檢查」不是同一件事。
+
 ## API
 
 | Method | Path | 功能 |
@@ -91,9 +103,9 @@ docker compose up --build
 | `GET` | `/api/me` | 取得目前使用者 |
 | `GET` | `/api/posts` | 取得時間線 |
 | `POST` | `/api/posts` | 新增貼文 |
-| `DELETE` | `/api/posts/{postID}` | 刪除自己的貼文 |
+| `DELETE` | `/api/posts/{postID}` | 刪除貼文，刻意不需要登入 |
 | `POST` | `/api/posts/{postID}/comments` | 新增留言或回覆 |
-| `DELETE` | `/api/comments/{commentID}` | 刪除自己的留言與底下回覆 |
+| `DELETE` | `/api/comments/{commentID}` | 刪除留言與底下回覆，刻意不需要登入 |
 
 ## 測試
 

@@ -81,11 +81,10 @@ func TestRegisterLoginPostCommentAndLogout(t *testing.T) {
 	}
 }
 
-func TestAuthorizationAndCookieSwap(t *testing.T) {
+func TestBrokenAccessControlDeleteWithoutAuthentication(t *testing.T) {
 	server := newTestServer(t)
 
 	alice := registerAndLogin(t, server, "alice", "Alice")
-	bob := registerAndLogin(t, server, "bob", "Bob")
 
 	resp := requestJSON(t, server, alice, http.MethodPost, "/api/posts", `{"content":"Alice 的貼文"}`)
 	if resp.StatusCode != http.StatusCreated {
@@ -98,23 +97,40 @@ func TestAuthorizationAndCookieSwap(t *testing.T) {
 		t.Fatalf("decode post response: %v", err)
 	}
 
-	resp = requestJSON(t, server, bob, http.MethodDelete, "/api/posts/"+strconv.FormatInt(postResponse.Post.ID, 10), "")
-	if resp.StatusCode != http.StatusForbidden {
-		t.Fatalf("delete other user's post status = %d, want %d", resp.StatusCode, http.StatusForbidden)
+	commentPath := "/api/posts/" + strconv.FormatInt(postResponse.Post.ID, 10) + "/comments"
+	resp = requestJSON(t, server, alice, http.MethodPost, commentPath, `{"content":"Alice 的留言"}`)
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("create comment status = %d, want %d", resp.StatusCode, http.StatusCreated)
+	}
+	var commentResponse struct {
+		Comment comment `json:"comment"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&commentResponse); err != nil {
+		t.Fatalf("decode comment response: %v", err)
 	}
 
-	resp = requestJSON(t, server, alice, http.MethodGet, "/api/me", "")
+	resp = requestJSON(t, server, nil, http.MethodDelete, "/api/comments/"+strconv.FormatInt(commentResponse.Comment.ID, 10), "")
 	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("cookie swap me status = %d, want %d", resp.StatusCode, http.StatusOK)
+		t.Fatalf("delete comment without auth status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
-	var meResponse struct {
-		User user `json:"user"`
+
+	resp = requestJSON(t, server, nil, http.MethodDelete, "/api/posts/"+strconv.FormatInt(postResponse.Post.ID, 10), "")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("delete post without auth status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&meResponse); err != nil {
-		t.Fatalf("decode me response: %v", err)
+
+	resp = requestJSON(t, server, alice, http.MethodGet, "/api/posts", "")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("list posts status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
-	if meResponse.User.Username != "alice" {
-		t.Fatalf("cookie identity = %q, want alice", meResponse.User.Username)
+	var postsResponse struct {
+		Posts []post `json:"posts"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&postsResponse); err != nil {
+		t.Fatalf("decode posts response: %v", err)
+	}
+	if len(postsResponse.Posts) != 0 {
+		t.Fatalf("posts after unauthenticated delete = %+v, want empty", postsResponse.Posts)
 	}
 }
 
