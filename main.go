@@ -409,7 +409,7 @@ func (s *jsonStore) listPosts(currentUserID int64) ([]post, error) {
 			CreatedAt:         record.CreatedAt,
 			AuthorUsername:    author.Username,
 			AuthorDisplayName: author.DisplayName,
-			CanDelete:         true,
+			CanDelete:         record.UserID == currentUserID,
 			Comments:          commentsByPost[record.ID],
 		}
 		if item.Comments == nil {
@@ -607,7 +607,7 @@ func buildComments(records []commentRecord, users map[int64]userRecord, postIDs 
 			CreatedAt:         record.CreatedAt,
 			AuthorUsername:    author.Username,
 			AuthorDisplayName: author.DisplayName,
-			CanDelete:         true,
+			CanDelete:         record.UserID == currentUserID,
 			Replies:           []comment{},
 		}
 		if record.ParentCommentID != nil {

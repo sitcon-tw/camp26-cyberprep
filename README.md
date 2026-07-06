@@ -14,6 +14,7 @@
 - 登入後顯示目前使用者
 - 發布 280 字內文字貼文
 - 回覆貼文與回覆留言
+- 刪除自己畫面上可見的貼文與留言
 - 所有登入使用者共用同一條時間線
 - 資料持久化到 `data/cyberprep.json`
 
@@ -83,7 +84,7 @@ docker compose up --build
 
 ## Broken Access Control Lab
 
-刪除 API 是刻意做壞的：不需要 cookie，也不確認目前使用者是不是作者。前端不顯示刪除按鈕，但知道貼文或留言 ID 的人，就可以直接呼叫 API 刪除。
+刪除 API 是刻意做壞的：不需要 cookie，也不確認目前使用者是不是作者。前端只會對目前使用者自己的貼文與留言顯示刪除按鈕，但知道任何貼文或留言 ID 的人，都可以直接呼叫 API 刪除。
 
 ```sh
 curl -X DELETE http://localhost:8080/api/posts/1

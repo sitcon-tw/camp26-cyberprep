@@ -69,6 +69,12 @@ func TestRegisterLoginPostCommentAndLogout(t *testing.T) {
 	if got := postsResponse.Posts[0].Comments[0].Content; got != "第一則留言" {
 		t.Fatalf("comment = %q, want 第一則留言", got)
 	}
+	if !postsResponse.Posts[0].CanDelete {
+		t.Fatal("own post CanDelete = false, want true")
+	}
+	if !postsResponse.Posts[0].Comments[0].CanDelete {
+		t.Fatal("own comment CanDelete = false, want true")
+	}
 
 	resp = requestJSON(t, server, sessionCookie, http.MethodPost, "/api/logout", "{}")
 	if resp.StatusCode != http.StatusOK {
@@ -107,6 +113,27 @@ func TestBrokenAccessControlDeleteWithoutAuthentication(t *testing.T) {
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&commentResponse); err != nil {
 		t.Fatalf("decode comment response: %v", err)
+	}
+
+	bob := registerAndLogin(t, server, "bob", "Bob")
+	resp = requestJSON(t, server, bob, http.MethodGet, "/api/posts", "")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("list posts as bob status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+	var bobPostsResponse struct {
+		Posts []post `json:"posts"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&bobPostsResponse); err != nil {
+		t.Fatalf("decode bob posts response: %v", err)
+	}
+	if len(bobPostsResponse.Posts) != 1 {
+		t.Fatalf("bob posts length = %d, want 1", len(bobPostsResponse.Posts))
+	}
+	if bobPostsResponse.Posts[0].CanDelete {
+		t.Fatal("bob sees Alice post CanDelete = true, want false")
+	}
+	if bobPostsResponse.Posts[0].Comments[0].CanDelete {
+		t.Fatal("bob sees Alice comment CanDelete = true, want false")
 	}
 
 	resp = requestJSON(t, server, nil, http.MethodDelete, "/api/comments/"+strconv.FormatInt(commentResponse.Comment.ID, 10), "")
