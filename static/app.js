@@ -176,7 +176,6 @@ if (page === "app") {
       renderContent(post.content),
       renderActions([
         action("回覆", "message", () => showReplyForm(body, post.id)),
-        post.canDelete ? action("刪除", "trash", () => deletePost(post.id), "danger") : null,
       ]),
     );
 
@@ -211,7 +210,6 @@ if (page === "app") {
       renderContent(comment.content),
       renderActions([
         action("回覆", "message", () => showReplyForm(body, postID, comment.id)),
-        comment.canDelete ? action("刪除", "trash", () => deleteComment(comment.id), "danger") : null,
       ]),
     );
 
@@ -329,23 +327,4 @@ if (page === "app") {
     input.focus();
   }
 
-  async function deletePost(postID) {
-    if (!window.confirm("刪除這則貼文？")) return;
-    try {
-      await api(`/api/posts/${postID}`, { method: "DELETE" });
-      await loadPosts();
-    } catch (error) {
-      setMessage(postMessage, error.message);
-    }
-  }
-
-  async function deleteComment(commentID) {
-    if (!window.confirm("刪除這則留言與底下回覆？")) return;
-    try {
-      await api(`/api/comments/${commentID}`, { method: "DELETE" });
-      await loadPosts();
-    } catch (error) {
-      setMessage(postMessage, error.message);
-    }
-  }
 }
