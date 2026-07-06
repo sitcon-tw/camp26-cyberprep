@@ -177,7 +177,7 @@ func loadTemplates() (*template.Template, error) {
 
 func (a *app) routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.Handle("GET /static/", noStore(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))))
 	mux.HandleFunc("GET /", a.home)
 	mux.HandleFunc("GET /login", a.loginPage)
 	mux.HandleFunc("GET /register", a.registerPage)
@@ -192,6 +192,13 @@ func (a *app) routes() http.Handler {
 	mux.HandleFunc("POST /api/posts/{postID}/comments", a.createComment)
 	mux.HandleFunc("DELETE /api/comments/{commentID}", a.deleteComment)
 	return mux
+}
+
+func noStore(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, max-age=0")
+		next.ServeHTTP(w, r)
+	})
 }
 
 func newJSONStore(path string) (*jsonStore, error) {
